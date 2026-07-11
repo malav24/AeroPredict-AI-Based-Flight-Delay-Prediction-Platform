@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Aero Predict</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* ----- SIMPLE PLANE NAVBAR ----- */
+        .plane-navbar {
+            position: relative;
+            width: 100%;
+            height: 180px;
+        }
+
+        .plane-img {
+            width: 100%;
+            height: 115%;
+            object-fit: contain;
+            object-position: top;
+        }
+
+        .logo {
+            position: absolute;
+            top: 96px;
+            left: 160px;
+            width: 60px;
+        }
+
+        .menu {
+            position: absolute;
+            top: 50px;
+            left: 300px;
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 100px;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .menu a:hover {
+            color: #0077ff;
+            transform: scale(1.05);
+            display: inline-block;
+        }
+
+        .brand-text {
+            position: absolute;
+            right: 920px;
+            top: 65%;
+            transform: translateY(-50%);
+            font-size: 72px;
+            font-weight: 900;
+            font-style: italic;
+            color: rgba(0, 0, 0, 0.12);
+            z-index: 5;
+            white-space: nowrap;
+            letter-spacing: -2px;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        /* Settings Container */
+        .settings-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .settings-header h1 {
+            font-size: 3rem;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .settings-header p {
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 300;
+        }
+
+        /* Settings Cards */
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .settings-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .settings-card h2 {
+            font-size: 1.8rem;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .settings-card h2 .icon {
+            font-size: 2rem;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .setting-label label {
+            font-size: 1rem;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .setting-label .value {
+            font-size: 0.95rem;
+            color: #0077ff;
+            font-weight: 600;
+        }
+
+        /* Toggles */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.4s;
+            border-radius: 25px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 21px;
+            width: 21px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #0077ff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(25px);
+        }
+
+        /* Sliders */
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0077ff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0077ff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
+        }
+
+        /* Select Dropdown */
+        .select-dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: #334155;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .select-dropdown:hover,
+        .select-dropdown:focus {
+            border-color: #0077ff;
+            outline: none;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0077ff 0%, #005acc 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #0077ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #334155;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #0077ff;
+        }
+
+        /* Footer */
+        .settings-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px 20px;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .settings-footer a {
+            color: #0077ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .settings-footer a:hover {
+            color: #005acc;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu {
+                display: none;
+            }
+
+            .settings-container {
+                margin-top: 200px;
+            }
+
+            .settings-header h1 {
+                font-size: 2rem;
+            }
+
+            .settings-card {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="plane-navbar">
+        <img src="/static/plane.png" class="plane-img">
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/predict-page">Predictions</a>
+            <a href="/visualizations">Data Visualization</a>
+            <a href="/settings">Settings</a>
+        </div>
+        <div class="brand-text">Aero Predict</div>
+    </nav>
+
+    <!-- Settings Container -->
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>⚙️ Settings</h1>
+            <p>Configure your Aero Predict experience</p>
+        </div>
+
+        <!-- Prediction Settings -->
+        <div class="settings-card">
+            <h2>
+                <span class="icon">🧠</span>
+                AI Prediction Settings
+            </h2>
+
+            <div class="setting-group">
+                <label for="model-version">Prediction Model Version:</label>
+                <select class="select-dropdown" id="model-version">
+                    <option value="v2" selected>GBT Model V2 (Current)</option>
+                    <option value="v1">GBT Model V1</option>
+                    <option value="experimental">Experimental Model</option>
+                </select>
+                <div class="info-box">
+                    <strong>Tip:</strong> GBT Model V2 provides the highest accuracy with recent data patterns.
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="confidence-threshold">Confidence Threshold:</label>
+                    <span class="value" id="threshold-value">75%</span>
+                </div>
+                <input type="range" id="confidence-threshold" class="range-slider" min="50" max="95" value="75" 
+                    oninput="document.getElementById('threshold-value').textContent = this.value + '%'">
+                <div class="info-box">
+                    Only display predictions with confidence above this threshold.
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="prediction-horizon">Prediction Horizon (Hours):</label>
+                    <span class="value" id="horizon-value">24h</span>
+                </div>
+                <input type="range" id="prediction-horizon" class="range-slider" min="6" max="72" step="6" value="24" 
+                    oninput="document.getElementById('horizon-value').textContent = this.value + 'h'">
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-card">
+            <h2>
+                <span class="icon">🔔</span>
+                Notification Preferences
+            </h2>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="delay-alerts">Delay Delay Alerts</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="delay-alerts" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="cancellation-alerts">Cancellation Risk Alerts</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="cancellation-alerts" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="weather-alerts">Weather Impact Alerts</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="weather-alerts">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label for="alert-method">Alert Notification Method:</label>
+                <select class="select-dropdown" id="alert-method">
+                    <option value="email" selected>Email</option>
+                    <option value="sms">SMS</option>
+                    <option value="both">Email & SMS</option>
+                    <option value="none">None</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Data Settings -->
+        <div class="settings-card">
+            <h2>
+                <span class="icon">📊</span>
+                Data & Analysis Settings
+            </h2>
+
+            <div class="setting-group">
+                <label for="data-timeframe">Historical Data Timeframe:</label>
+                <select class="select-dropdown" id="data-timeframe">
+                    <option value="1month">Last 1 Month</option>
+                    <option value="3months" selected>Last 3 Months</option>
+                    <option value="6months">Last 6 Months</option>
+                    <option value="1year">Last 1 Year</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="auto-refresh">Auto-Refresh Predictions</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="auto-refresh" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="refresh-interval">Refresh Interval (Minutes):</label>
+                    <span class="value" id="interval-value">15 min</span>
+                </div>
+                <input type="range" id="refresh-interval" class="range-slider" min="5" max="60" step="5" value="15" 
+                    oninput="document.getElementById('interval-value').textContent = this.value + ' min'">
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="export-data">Enable Data Export</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="export-data">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display Settings -->
+        <div class="settings-card">
+            <h2>
+                <span class="icon">🎨</span>
+                Display Settings
+            </h2>
+
+            <div class="setting-group">
+                <label for="theme">Theme:</label>
+                <select class="select-dropdown" id="theme">
+                    <option value="light" selected>Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="auto">Auto (System)</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="language">Language:</label>
+                <select class="select-dropdown" id="language">
+                    <option value="en" selected>English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">
+                    <label for="detailed-charts">Show Detailed Charts</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="detailed-charts" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- API & Integration Settings -->
+        <div class="settings-card">
+            <h2>
+                <span class="icon">🔗</span>
+                API & Integration
+            </h2>
+
+            <div class="setting-group">
+                <label>API Key:</label>
+                <input type="text" readonly value="sk_live_••••••••••••••••" style="width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 10px; background: #f8fafc; color: #64748b;">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary">Regenerate API Key</button>
+                <button class="btn btn-secondary">View Documentation</button>
+            </div>
+
+            <div class="info-box">
+                <strong>Note:</strong> API integrations allow you to access predictions programmatically.
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin: 40px 0;">
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save Changes</button>
+                <button class="btn btn-secondary" onclick="resetSettings()">🔄 Reset to Defaults</button>
+                <button class="btn btn-danger" onclick="confirmReset()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="settings-footer">
+        <p>Aero Predict v2.0 | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Contact Support</a></p>
+    </div>
+
+    <script>
+        function saveSettings() {
+            alert('✅ Settings saved successfully!\n\nYour preferences have been updated.');
+            console.log('Settings saved');
+        }
+
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                alert('⚙️ Settings reset to defaults.');
+                location.reload();
+            }
+        }
+
+        function confirmReset() {
+            if (confirm('⚠️ This will delete all your data and reset the system. This action cannot be undone. Are you sure?')) {
+                alert('🗑️ All data has been cleared.');
+                console.log('Data cleared');
+            }
+        }
+
+        // Store settings in localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const settings = ['model-version', 'confidence-threshold', 'prediction-horizon', 
+                            'delay-alerts', 'cancellation-alerts', 'weather-alerts', 'alert-method',
+                            'data-timeframe', 'auto-refresh', 'refresh-interval', 'export-data',
+                            'theme', 'language', 'detailed-charts'];
+            
+            // Load saved settings
+            settings.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const saved = localStorage.getItem('setting_' + id);
+                    if (saved) {
+                        if (element.type === 'checkbox') {
+                            element.checked = saved === 'true';
+                        } else {
+                            element.value = saved;
+                        }
+                    }
+                }
+            });
+        });
+
+        // Save settings to localStorage on change
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('change', function() {
+                const id = this.id;
+                const value = this.type === 'checkbox' ? this.checked : this.value;
+                localStorage.setItem('setting_' + id, value);
+            });
+        });
+    </script>
+</body>
+
+</html>

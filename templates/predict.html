@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Flight Delay - Aero Predict</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body.predict-page {
+            background: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* ----- NAVBAR ----- */
+        .plane-navbar { position: relative; width: 100%; height: 180px; }
+        .plane-img { width: 100%; height: 115%; object-fit: contain; object-position: top; }
+        .logo { position: absolute; top: 96px; left: 160px; width: 60px; }
+        .menu { position: absolute; top: 50px; left: 300px; }
+        .menu a {
+            text-decoration: none; color: black; font-size: 20px;
+            font-weight: bold; margin-right: 100px; letter-spacing: 2px; transition: 0.3s;
+        }
+        .menu a:hover { color: #0077ff; transform: scale(1.05); display: inline-block; }
+        .brand-text {
+            position: absolute; right: 920px; top: 65%; transform: translateY(-50%);
+            font-size: 72px; font-weight: 900; font-style: italic;
+            color: rgba(0,0,0,0.12); z-index: 5; white-space: nowrap;
+            letter-spacing: -2px; line-height: 1; pointer-events: none;
+        }
+
+        /* ----- Main Content ----- */
+        .main-content { padding-top: 40px; }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="predict-page">
+    <!-- NAVBAR -->
+    <nav class="plane-navbar">
+        <img src="/static/plane.png" class="plane-img">
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/predict-page">Predictions</a>
+            <a href="/visualizations">Data Visualization</a>
+            <a href="/settings">Settings</a>
+        </div>
+        <div class="brand-text">Aero Predict</div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <section class="predict-section">
+            <div class="predict-container">
+                <h1>✈️ AI Flight Delay Prediction</h1>
+                <p>Enter your flight details. AI will auto-fill weather &amp; route information.</p>
+
+                <!-- Info Box -->
+                <div class="info-box">
+                    <strong>🤖 How It Works:</strong>
+                    <ul>
+                        <li>You enter: Airline, Departure airport, Arrival airport, Date &amp; Time</li>
+                        <li>AI auto-fills: Weather, flight duration, route type, and more</li>
+                        <li>Model predicts: Delay Risk with confidence score</li>
+                    </ul>
+                </div>
+
+                {% if error %}
+                <div style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-weight: 500;">
+                    ⚠️ {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/predict" class="prediction-form" id="predictForm">
+                    <div class="form-grid">
+
+                        <!-- Airline -->
+                        <div class="form-group full-width">
+                            <label for="airline_key">✈️ Airline Name *</label>
+                            <select id="airline_key" name="airline_key" required>
+                                <option value="">-- Select Airline --</option>
+                                {% for key, display in airlines.items() %}
+                                <option value="{{ key }}"
+                                    {% if form_values and form_values.airline_key == key %}selected{% endif %}>
+                                    {{ display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Departure Airport -->
+                        <div class="form-group">
+                            <label for="dep_airport">📍 Departure Airport *</label>
+                            <input type="text" id="dep_airport" name="dep_airport"
+                                list="airports-list"
+                                placeholder="Type airport code (e.g. ORD)"
+                                value="{{ form_values.dep_airport if form_values else '' }}"
+                                maxlength="4" required>
+                            <datalist id="airports-list"></datalist>
+                        </div>
+
+                        <!-- Arrival Airport -->
+                        <div class="form-group">
+                            <label for="arr_airport">📍 Arrival Airport *</label>
+                            <input type="text" id="arr_airport" name="arr_airport"
+                                list="airports-list"
+                                placeholder="Type airport code (e.g. JFK)"
+                                value="{{ form_values.arr_airport if form_values else '' }}"
+                                maxlength="4" required>
+                        </div>
+
+                        <!-- Travel Date -->
+                        <div class="form-group">
+                            <label for="travel_date">📅 Travel Date *</label>
+                            <input type="date" id="travel_date" name="travel_date"
+                                value="{{ form_values.travel_date if form_values else '' }}" required>
+                        </div>
+
+                        <!-- Departure Time -->
+                        <div class="form-group">
+                            <label for="dep_time">🕐 Departure Time *</label>
+                            <select id="dep_time" name="dep_time">
+                                {% for slot, label in [('Morning','Morning (6am–12pm)'),('Afternoon','Afternoon (12pm–6pm)'),('Evening','Evening (6pm–10pm)'),('Night','Night (10pm–6am)')] %}
+                                <option value="{{ slot }}"
+                                    {% if form_values and form_values.dep_time == slot %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <!-- ── Auto-filled Panel ── -->
+                    <div id="autofillPanel" style="display:{% if autofill %}block{% else %}none{% endif %}; margin: 18px 0;">
+                        <div style="display:inline-flex;align-items:center;gap:6px;
+                                    background:rgba(99,102,241,0.10);border:1px solid rgba(99,102,241,0.30);
+                                    color:#6366f1;font-size:0.75rem;font-weight:700;
+                                    padding:4px 14px;border-radius:20px;margin-bottom:12px;">
+                            ⚡ Auto-filled from Historical Data
+                        </div>
+
+                        <div style="display:grid;gap:6px;">
+                            {% set af_rows = [
+                                ('Day of Week',       'af_day',     autofill.day_of_week if autofill else ''),
+                                ('Weekend Flight',     'af_weekend', autofill.is_weekend if autofill else ''),
+                                ('Est. Flight Duration','af_dur',   (autofill.flight_duration|string + ' mins') if autofill else ''),
+                                ('Route Type',         'af_route',  autofill.route_type if autofill else ''),
+                                ('Avg Temperature',    'af_temp',   (autofill.tavg|string + '°C (historical avg for ' + (form_values.dep_airport if form_values else '') + ')') if autofill else ''),
+                                ('Precipitation',      'af_prcp',   (autofill.prcp|string + ' mm') if autofill else ''),
+                                ('Wind Speed',         'af_wspd',   (autofill.wspd|string + ' km/h') if autofill else ''),
+                                ('Air Pressure',       'af_pres',   (autofill.pres|string + ' hPa') if autofill else ''),
+                                ('Aircraft Age',       'af_age',    '12 years (fleet median)')
+                            ] %}
+                            {% for label, el_id, val in af_rows %}
+                            <div style="display:flex;justify-content:space-between;align-items:center;
+                                        padding:9px 16px;background:rgba(255,255,255,0.55);
+                                        border:1px solid rgba(0,0,0,0.08);border-radius:10px;
+                                        font-size:0.88rem;">
+                                <span style="color:#64748b;">{{ label }}</span>
+                                <span id="{{ el_id }}" style="font-weight:700;color:#1e293b;">{{ val }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="submit-btn">🚀 Predict Delay Risk</button>
+                </form>
+
+                <!-- ── Result Display ── -->
+                {% if prediction %}
+                <div class="result-container">
+                    <div class="result-box {{ prediction.risk }}-risk">
+                        <h2>🎯 Prediction Result</h2>
+                        <p class="result-text" style="color:{{ prediction.color }};font-size:1.6rem;font-weight:800;">
+                            {{ prediction.icon }} {{ prediction.big_label }}
+                        </p>
+                        <p style="color:{{ prediction.color }};font-weight:600;margin-top:4px;">
+                            {{ prediction.verdict }}
+                        </p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px;">
+                            <div>
+                                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Delay Probability</div>
+                                <div style="font-size:1.8rem;font-weight:800;color:{{ prediction.color }};">{{ prediction.delay_prob }}%</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">On-Time Probability</div>
+                                <div style="font-size:1.8rem;font-weight:800;color:#10b981;">{{ prediction.on_time_prob }}%</div>
+                            </div>
+                        </div>
+
+                        {% if prediction.est_delay_mins is not none %}
+                        <div style="margin-top:16px;padding:14px 16px;
+                                    background:rgba(239,68,68,0.07);
+                                    border:1px solid rgba(239,68,68,0.18);
+                                    border-radius:12px;text-align:center;">
+                            <div style="font-size:0.72rem;color:#64748b;
+                                        text-transform:uppercase;letter-spacing:0.5px;">
+                                Est. Delay Time
+                            </div>
+                            <div style="font-size:1.8rem;font-weight:800;color:{{ prediction.color }};">
+                                ~{{ prediction.est_delay_mins }} mins
+                            </div>
+                            <div style="font-size:0.72rem;color:#94a3b8;margin-top:2px;">
+                                GBT Regression model estimate
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <p style="font-size:0.83rem;color:#64748b;margin-top:14px;">
+                            {% if prediction.risk == 'high' %}
+                                Our AI predicts significant delay risk based on historical patterns for this route, airline, and season.
+                            {% elif prediction.risk == 'medium' %}
+                                Some stress factors detected. We recommend checking flight status closer to departure.
+                            {% else %}
+                                Historical data for this route, airline, and time of year suggests low delay probability.
+                            {% endif %}
+                        </p>
+
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- ── Analytics ── -->
+                {% if stats %}
+                <div class="stats-box">
+                    <h3>📊 System Analytics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Flights Analyzed</span>
+                            <span class="stat-value">1,966,327</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Delay</span>
+                            <span class="stat-value">12.4 min</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Model Accuracy</span>
+                            <span class="stat-value">80.88%</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 Aero Predict - AI-Powered Big Data Flight Delay Prediction</p>
+    </footer>
+
+    <script>
+        // Load airports into datalist
+        fetch('/api/airports').then(r => r.json()).then(list => {
+            const dl = document.getElementById('airports-list');
+            list.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a; dl.appendChild(opt);
+            });
+        });
+
+        // Auto-fill on input change
+        let afTimer = null;
+        function scheduleAutofill() {
+            clearTimeout(afTimer);
+            afTimer = setTimeout(fetchAutofill, 600);
+        }
+
+        async function fetchAutofill() {
+            const dep  = document.getElementById('dep_airport').value.trim().toUpperCase();
+            const arr  = document.getElementById('arr_airport').value.trim().toUpperCase();
+            const dt   = document.getElementById('travel_date').value;
+            const time = document.getElementById('dep_time').value;
+            if (dep.length < 3 || arr.length < 3 || !dt) return;
+
+            try {
+                const r = await fetch(`/api/autofill?dep=${dep}&arr=${arr}&date=${dt}&dep_time=${time}`);
+                const d = await r.json();
+                document.getElementById('af_day').textContent     = d.day_of_week;
+                document.getElementById('af_weekend').textContent = d.is_weekend;
+                document.getElementById('af_dur').textContent     = d.flight_duration + ' mins';
+                document.getElementById('af_route').textContent   = d.route_type;
+                document.getElementById('af_temp').textContent    = d.tavg + '°C (historical avg for ' + dep + ')';
+                document.getElementById('af_prcp').textContent    = d.prcp + ' mm';
+                document.getElementById('af_wspd').textContent    = d.wspd + ' km/h';
+                document.getElementById('af_pres').textContent    = d.pres + ' hPa';
+                document.getElementById('autofillPanel').style.display = 'block';
+            } catch(e) { console.warn('Autofill error:', e); }
+        }
+
+        ['dep_airport','arr_airport','travel_date','dep_time'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', scheduleAutofill);
+                el.addEventListener('input',  scheduleAutofill);
+            }
+        });
+    </script>
+</body>
+</html>

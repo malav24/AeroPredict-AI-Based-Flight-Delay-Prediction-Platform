@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction History - AeroPredict</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .plane-navbar { position: relative; width: 100%; height: 180px; }
+        .plane-img { width: 100%; height: 115%; object-fit: contain; object-position: top; }
+        .menu { position: absolute; top: 50px; left: 300px; }
+        .menu a {
+            text-decoration: none; color: black; font-size: 20px;
+            font-weight: bold; margin-right: 100px; letter-spacing: 2px; transition: 0.3s;
+        }
+        .menu a:hover { color: #0077ff; }
+        .brand-text {
+            position: absolute; right: 920px; top: 65%; transform: translateY(-50%);
+            font-size: 72px; font-weight: 900; font-style: italic;
+            color: rgba(0,0,0,0.12); z-index: 5; white-space: nowrap; pointer-events: none;
+        }
+
+        .main-content { padding: 40px 60px 60px; max-width: 1300px; margin: 0 auto; }
+
+        .page-title {
+            font-size: 2rem; font-weight: 800; color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .page-sub {
+            font-size: 0.9rem; color: #64748b; margin-bottom: 30px;
+        }
+
+        /* Status badge */
+        .db-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 700; margin-bottom: 24px;
+        }
+        .db-badge.ok  { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #059669; }
+        .db-badge.err { background: rgba(239,68,68,0.10);  border: 1px solid rgba(239,68,68,0.25); color: #dc2626; }
+
+        /* Table */
+        .table-wrap {
+            background: rgba(255,255,255,0.75);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #1e293b; }
+        thead th {
+            padding: 14px 16px; text-align: left;
+            font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; color: #94a3b8;
+        }
+        tbody tr { border-bottom: 1px solid rgba(0,0,0,0.05); transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(0,119,255,0.04); }
+        tbody td { padding: 12px 16px; font-size: 0.85rem; color: #334155; }
+
+        /* Risk badges */
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 8px;
+            font-size: 0.72rem; font-weight: 700;
+        }
+        .badge-high   { background: rgba(239,68,68,0.12);  color: #dc2626; }
+        .badge-medium { background: rgba(245,158,11,0.12); color: #d97706; }
+        .badge-low    { background: rgba(16,185,129,0.12); color: #059669; }
+
+        /* Source badge */
+        .src-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 6px;
+            font-size: 0.68rem; font-weight: 600;
+        }
+        .src-flask     { background: #dbeafe; color: #1d4ed8; }
+        .src-streamlit { background: #fce7f3; color: #be185d; }
+
+        .empty-state {
+            text-align: center; padding: 60px;
+            color: #94a3b8; font-size: 1rem;
+        }
+        .empty-state span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+        .back-btn {
+            display: inline-block; margin-top: 24px;
+            padding: 10px 24px; background: #1e293b;
+            color: white; text-decoration: none;
+            border-radius: 10px; font-weight: 600; font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .back-btn:hover { background: #0077ff; }
+
+        footer { text-align: center; padding: 30px; color: #94a3b8; font-size: 0.78rem; }
+    </style>
+</head>
+<body>
+    <nav class="plane-navbar">
+        <img src="/static/plane.png" class="plane-img" alt="plane">
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/predict-page">Predictions</a>
+            <a href="/history">History</a>
+            <a href="/visualizations">Data Visualization</a>
+            <a href="/settings">Settings</a>
+        </div>
+        <div class="brand-text">Aero Predict</div>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="page-title">📋 Prediction History</h1>
+        <p class="page-sub">All flight delay predictions logged to MongoDB — real-time NoSQL storage</p>
+
+        {% if mongo_ok %}
+        <div class="db-badge ok">🟢 MongoDB Connected &nbsp;|&nbsp; aeropredict.predictions &nbsp;|&nbsp; {{ records|length }} recent records</div>
+        {% else %}
+        <div class="db-badge err">🔴 MongoDB not connected — start MongoDB first</div>
+        {% endif %}
+
+        <div class="table-wrap">
+            {% if records %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Source</th>
+                        <th>Route</th>
+                        <th>Airline</th>
+                        <th>Date</th>
+                        <th>Dep. Time</th>
+                        <th>Delay Prob.</th>
+                        <th>Prediction</th>
+                        <th>Model</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.get('timestamp', '—') }}</td>
+                        <td>
+                            <span class="src-badge src-{{ r.get('source', 'flask') }}">
+                                {{ r.get('source', 'flask') }}
+                            </span>
+                        </td>
+                        <td><strong>{{ r.get('route', '—') }}</strong></td>
+                        <td>{{ r.get('airline', '—') }}</td>
+                        <td>{{ r.get('travel_date', '—') }}</td>
+                        <td>{{ r.get('dep_time', '—') }}</td>
+                        <td>{{ r.get('delay_prob', '—') }}%</td>
+                        <td>
+                            {% set risk = r.get('risk', 'low') %}
+                            <span class="badge badge-{{ risk }}">
+                                {% if risk == 'high' %}🔴 DELAYED
+                                {% elif risk == 'medium' %}⚠️ POSSIBLY DELAYED
+                                {% else %}✅ ON TIME{% endif %}
+                            </span>
+                        </td>
+                        <td style="font-size:0.75rem;color:#64748b;">{{ r.get('model_used', '—') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <span>📭</span>
+                No predictions yet. Make a prediction first!
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="/predict-page" class="back-btn">← Make a Prediction</a>
+    </div>
+
+    <footer>&copy; 2024 AeroPredict — Big Data Flight Delay Prediction</footer>
+</body>
+</html>

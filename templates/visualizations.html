@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization - Aero Predict</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --ink: #14213d;
+            --muted: #5b6b87;
+            --line: rgba(20, 33, 61, 0.1);
+            --card: rgba(255, 255, 255, 0.74);
+            --accent: #0f6cbd;
+            --accent-2: #17a2b8;
+            --warm: #ff7f50;
+            --danger: #d9485f;
+            --success: #179c7d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            color: var(--ink);
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            min-height: 100vh;
+        }
+
+        .plane-navbar {
+            position: relative;
+            width: 100%;
+            height: 180px;
+        }
+
+        .plane-img {
+            width: 100%;
+            height: 115%;
+            object-fit: contain;
+            object-position: top;
+        }
+
+        .menu {
+            position: absolute;
+            top: 50px;
+            left: 300px;
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 100px;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            color: #0077ff;
+            transform: scale(1.05);
+            display: inline-block;
+        }
+
+        .brand-text {
+            position: absolute;
+            right: 880px;
+            top: 65%;
+            transform: translateY(-50%);
+            font-size: 72px;
+            font-weight: 900;
+            font-style: italic;
+            color: rgba(0, 0, 0, 0.12);
+            z-index: 5;
+            white-space: nowrap;
+            letter-spacing: -2px;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .page-shell {
+            width: min(1360px, calc(100% - 48px));
+            margin: 0 auto 56px;
+            padding-top: 28px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            align-items: stretch;
+            margin-top: 12px;
+        }
+
+        .hero-panel,
+        .hero-metrics,
+        .chart-card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 40px rgba(20, 33, 61, 0.08);
+            backdrop-filter: blur(16px);
+        }
+
+        .hero-panel {
+            border-radius: 28px;
+            padding: 34px 34px 28px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero-panel::before,
+        .hero-metrics::before,
+        .chart-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(15, 108, 189, 0.08);
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.3rem, 4vw, 4rem);
+            line-height: 0.98;
+            margin-top: 18px;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            max-width: 640px;
+            color: var(--muted);
+            font-size: 1.04rem;
+            line-height: 1.75;
+        }
+
+        .flight-ribbon {
+            margin-top: 28px;
+            position: relative;
+            height: 118px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.32)),
+                linear-gradient(120deg, rgba(15,108,189,0.16), rgba(23,162,184,0.16));
+            border: 1px solid rgba(15, 108, 189, 0.15);
+            overflow: hidden;
+        }
+
+        .flight-ribbon::before {
+            content: "";
+            position: absolute;
+            inset: 28px 26px auto;
+            height: 2px;
+            border-top: 2px dashed rgba(15, 108, 189, 0.28);
+        }
+
+        .plane-chip {
+            position: absolute;
+            top: 22px;
+            left: -10%;
+            font-size: 2rem;
+            filter: drop-shadow(0 8px 10px rgba(15, 108, 189, 0.25));
+            animation: flyAcross 9s ease-in-out infinite;
+        }
+
+        .flight-pillars {
+            position: absolute;
+            inset: auto 18px 14px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .flight-pillars div {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(20, 33, 61, 0.07);
+        }
+
+        .flight-pillars strong {
+            display: block;
+            font-size: 0.76rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .flight-pillars span {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .hero-metrics {
+            border-radius: 28px;
+            padding: 26px;
+            display: grid;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card {
+            border-radius: 22px;
+            padding: 20px 20px 18px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(20, 33, 61, 0.07);
+            transform: translateY(24px);
+            opacity: 0;
+            transition: 0.6s ease;
+        }
+
+        .metric-card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .metric-card strong {
+            display: block;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .metric-card .value {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .metric-card .value small {
+            font-size: 0.95rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .metric-card p {
+            color: var(--muted);
+            font-size: 0.94rem;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .viz-grid {
+            margin-top: 28px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 22px;
+        }
+
+        .chart-card {
+            border-radius: 26px;
+            padding: 22px 22px 14px;
+            min-height: 420px;
+            transform: translateY(24px);
+            opacity: 0;
+            transition: 0.65s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .chart-card.wide {
+            grid-column: span 8;
+        }
+
+        .chart-card.tall {
+            grid-column: span 4;
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card.half {
+            grid-column: span 6;
+        }
+
+        .chart-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .chart-top h2 {
+            font-size: 1.35rem;
+            margin-bottom: 6px;
+        }
+
+        .chart-top p {
+            color: var(--muted);
+            max-width: 540px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .chart-tag {
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(15, 108, 189, 0.08);
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .chart-shell {
+            width: 100%;
+            height: 320px;
+        }
+
+        .chart-card.full .chart-shell {
+            height: 420px;
+        }
+
+        .chart-card.half .chart-shell {
+            height: 360px;
+        }
+
+        .loading-note {
+            margin-top: 22px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        @keyframes flyAcross {
+            0% {
+                transform: translateX(0) translateY(10px) rotate(-6deg);
+            }
+            20% {
+                transform: translateX(38vw) translateY(-6px) rotate(5deg);
+            }
+            50% {
+                transform: translateX(72vw) translateY(8px) rotate(-4deg);
+            }
+            100% {
+                transform: translateX(110vw) translateY(-10px) rotate(2deg);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card.wide,
+            .chart-card.tall,
+            .chart-card.half {
+                grid-column: 1 / -1;
+            }
+
+            .brand-text {
+                right: auto;
+                left: 36px;
+                top: 72%;
+                font-size: 54px;
+            }
+
+            .menu {
+                left: 220px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page-shell {
+                width: min(100% - 24px, 1360px);
+            }
+
+            .plane-navbar {
+                height: 150px;
+            }
+
+            .menu {
+                left: 24px;
+                top: 18px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px 18px;
+            }
+
+            .menu a {
+                margin-right: 0;
+                font-size: 15px;
+            }
+
+            .brand-text {
+                left: 24px;
+                top: 82%;
+                font-size: 34px;
+            }
+
+            .hero-panel,
+            .hero-metrics,
+            .chart-card {
+                border-radius: 22px;
+            }
+
+            .flight-pillars {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="plane-navbar">
+        <img src="/static/plane.png" class="plane-img" alt="plane">
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/predict-page">Predictions</a>
+            <a href="/visualizations" class="active">Data Visualization</a>
+            <a href="/settings">Settings</a>
+        </div>
+        <div class="brand-text">Aero Predict</div>
+    </nav>
+
+    <main class="page-shell">
+        <section class="hero">
+            <div class="hero-panel">
+                <div class="eyebrow">Data Visualization Flight Deck</div>
+                <h1>Turn raw flight history into <span>clear operational insight.</span></h1>
+                <p>
+                    These charts transform delay, weather, route, and airport behavior into an
+                    interactive dashboard. Instead of static screenshots, the page renders live
+                    visual stories that help users understand when delays build, where they cluster,
+                    and which operating conditions create the most risk.
+                </p>
+
+                <div class="flight-ribbon">
+                    <div class="plane-chip">✈</div>
+                    <div class="flight-pillars">
+                        <div>
+                            <strong>Coverage</strong>
+                            <span>{{ stats.total_flights }} flights</span>
+                        </div>
+                        <div>
+                            <strong>Models</strong>
+                            <span>{{ stats.model_type }}</span>
+                        </div>
+                        <div>
+                            <strong>Airports</strong>
+                            <span>{{ stats.airports }} tracked</span>
+                        </div>
+                        <div>
+                            <strong>Airlines</strong>
+                            <span>{{ stats.airlines }} compared</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hero-metrics">
+                <div class="metric-card reveal">
+                    <strong>Peak Seasonal Delay</strong>
+                    <div class="value" id="metric-peak-month">Loading <small>month</small></div>
+                    <p>Average arrival delay climbs during the busiest summer period, showing when the network carries the most operational stress.</p>
+                </div>
+                <div class="metric-card reveal">
+                    <strong>Most Delayed Airline</strong>
+                    <div class="value" id="metric-top-airline">Loading <small>carrier</small></div>
+                    <p>This view surfaces the carrier with the highest average arrival delay so the user can read performance differences instantly.</p>
+                </div>
+                <div class="metric-card reveal">
+                    <strong>Peak Delay Volume</strong>
+                    <div class="value" id="metric-delay-volume">Loading <small>month</small></div>
+                    <p>Total delayed flights highlight when the system experiences the broadest disruption, not just the worst averages.</p>
+                </div>
+            </aside>
+        </section>
+
+        <section class="viz-grid">
+            <article class="chart-card wide reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Temperature vs Delay Intelligence</h2>
+                        <p>A cleaned temperature-delay view with a soft scatter sample plus a robust smoothed trend, so users see both flight-level variability and the overall weather signal.</p>
+                    </div>
+                    <span class="chart-tag">Weather Trend</span>
+                </div>
+                <div id="temperature-delay-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card tall reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Delay Heatmap</h2>
+                        <p>Fastest way to understand the riskiest day-and-time combinations.</p>
+                    </div>
+                    <span class="chart-tag">Operational Window</span>
+                </div>
+                <div id="delay-heatmap-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card half reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Monthly Average Delay</h2>
+                        <p>Seasonality shown as a smooth line with highlighted high-stress months.</p>
+                    </div>
+                    <span class="chart-tag">Seasonality</span>
+                </div>
+                <div id="monthly-delay-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card half reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Monthly Delay Volume</h2>
+                        <p>Total delayed flights reveal when the network suffers the most widespread disruption.</p>
+                    </div>
+                    <span class="chart-tag">Traffic Pressure</span>
+                </div>
+                <div id="monthly-delay-count-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card half reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Top Delayed Airlines</h2>
+                        <p>A ranked airline comparison designed for quick scanning and clear relative performance.</p>
+                    </div>
+                    <span class="chart-tag">Carrier Ranking</span>
+                </div>
+                <div id="top-airlines-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card half reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Precipitation vs Delay</h2>
+                        <p>Smoothed rainfall bands reduce noise and show how heavier precipitation generally pushes delay upward.</p>
+                    </div>
+                    <span class="chart-tag">Rainfall Signal</span>
+                </div>
+                <div id="precipitation-delay-chart" class="chart-shell"></div>
+            </article>
+
+            <article class="chart-card full reveal">
+                <div class="chart-top">
+                    <div>
+                        <h2>Airport Delay Geospatial Map</h2>
+                        <p>An interactive airport map where marker size and color work together to highlight delay hotspots across the network.</p>
+                    </div>
+                    <span class="chart-tag">Geospatial</span>
+                </div>
+                <div id="airport-map-chart" class="chart-shell"></div>
+            </article>
+        </section>
+
+        <p class="loading-note" id="viz-status">Loading visualization data...</p>
+    </main>
+
+    <script>
+        const chartConfig = {
+            displayModeBar: false,
+            responsive: true,
+            scrollZoom: false
+        };
+
+        const axisStyle = {
+            showgrid: true,
+            gridcolor: "rgba(20,33,61,0.08)",
+            zeroline: false,
+            tickfont: {color: "#52617d"},
+            titlefont: {color: "#14213d"}
+        };
+
+        const baseLayout = {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(255,255,255,0.15)",
+            font: {family: "Outfit, sans-serif", color: "#14213d"},
+            margin: {l: 56, r: 24, t: 14, b: 48}
+        };
+
+        function revealCards() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("visible");
+                    }
+                });
+            }, {threshold: 0.18});
+
+            document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+        }
+
+        function setSummary(summary) {
+            document.getElementById("metric-peak-month").innerHTML =
+                `${summary.peak_month.value.toFixed(1)}<small>${summary.peak_month.label}</small>`;
+            document.getElementById("metric-top-airline").innerHTML =
+                `${summary.top_airline.value.toFixed(1)}<small>${summary.top_airline.label}</small>`;
+            document.getElementById("metric-delay-volume").innerHTML =
+                `${summary.delay_volume_peak.value.toLocaleString()}<small>${summary.delay_volume_peak.label}</small>`;
+        }
+
+        function renderTemperatureChart(dataset) {
+            const trend = dataset.trend;
+            const sample = dataset.sample;
+
+            Plotly.newPlot("temperature-delay-chart", [
+                {
+                    x: sample.map((p) => p.temperature_c),
+                    y: sample.map((p) => p.arrival_delay),
+                    mode: "markers",
+                    type: "scatter",
+                    name: "Flight sample",
+                    marker: {
+                        size: 7,
+                        color: "rgba(23,162,184,0.22)",
+                        line: {width: 0}
+                    },
+                    hovertemplate: "Temp %{x}°C<br>Delay %{y:.1f} min<extra>Sample</extra>"
+                },
+                {
+                    x: trend.map((p) => p.temp_band),
+                    y: trend.map((p) => p.avg_delay),
+                    mode: "lines+markers",
+                    type: "scatter",
+                    name: "Average delay",
+                    line: {color: "#0f6cbd", width: 4, shape: "spline", smoothing: 1.1},
+                    marker: {size: 8, color: "#0f6cbd"},
+                    customdata: trend.map((p) => [p.flight_count, p.median_delay]),
+                    hovertemplate:
+                        "Temp band %{x}°C<br>Avg delay %{y:.1f} min<br>" +
+                        "Median %{customdata[1]:.1f} min<br>Flights %{customdata[0]}<extra>Trend</extra>"
+                }
+            ], {
+                ...baseLayout,
+                xaxis: {...axisStyle, title: "Average temperature (°C)"},
+                yaxis: {...axisStyle, title: "Arrival delay (minutes)"},
+                legend: {orientation: "h", y: 1.12, x: 0}
+            }, chartConfig);
+        }
+
+        function renderHeatmap(dataset) {
+            Plotly.newPlot("delay-heatmap-chart", [{
+                x: dataset.times,
+                y: dataset.days,
+                z: dataset.values,
+                type: "heatmap",
+                colorscale: [
+                    [0, "#fff8db"],
+                    [0.4, "#fed67b"],
+                    [0.7, "#ff7f50"],
+                    [1, "#c71f37"]
+                ],
+                hovertemplate: "%{y} / %{x}<br>%{z:.1f} min<extra>Delay</extra>"
+            }], {
+                ...baseLayout,
+                margin: {l: 54, r: 16, t: 8, b: 44}
+            }, chartConfig);
+        }
+
+        function renderMonthlyDelay(dataset) {
+            Plotly.newPlot("monthly-delay-chart", [{
+                x: dataset.map((row) => row.Month),
+                y: dataset.map((row) => row.Average_Arrival_Delay_Minutes),
+                mode: "lines+markers",
+                type: "scatter",
+                line: {color: "#ff7f50", width: 4, shape: "spline", smoothing: 0.85},
+                fill: "tozeroy",
+                fillcolor: "rgba(255,127,80,0.15)",
+                marker: {size: 10, color: "#d9485f"},
+                hovertemplate: "%{x}<br>%{y:.2f} min<extra>Average delay</extra>"
+            }], {
+                ...baseLayout,
+                xaxis: {...axisStyle, title: "Month"},
+                yaxis: {...axisStyle, title: "Average delay (minutes)"}
+            }, chartConfig);
+        }
+
+        function renderMonthlyDelayCount(dataset) {
+            Plotly.newPlot("monthly-delay-count-chart", [{
+                x: dataset.map((row) => row.Month),
+                y: dataset.map((row) => row.Total_Delays),
+                type: "bar",
+                marker: {
+                    color: dataset.map((_, index) => index === 6 ? "#d9485f" : "#4c8ed9"),
+                    line: {color: "rgba(20,33,61,0.1)", width: 1}
+                },
+                hovertemplate: "%{x}<br>%{y:,} delayed flights<extra>Volume</extra>"
+            }], {
+                ...baseLayout,
+                xaxis: {...axisStyle, title: "Month"},
+                yaxis: {...axisStyle, title: "Delayed flights"}
+            }, chartConfig);
+        }
+
+        function renderTopAirlines(dataset) {
+            const rows = [...dataset].reverse();
+            Plotly.newPlot("top-airlines-chart", [{
+                x: rows.map((row) => row.Average_Arrival_Delay),
+                y: rows.map((row) => row.Airline),
+                type: "bar",
+                orientation: "h",
+                marker: {
+                    color: rows.map((row) => row.Average_Arrival_Delay < 0 ? "#179c7d" : "#0f6cbd"),
+                    line: {width: 1, color: "rgba(20,33,61,0.12)"}
+                },
+                hovertemplate: "%{y}<br>%{x:.2f} min<extra>Airline delay</extra>"
+            }], {
+                ...baseLayout,
+                margin: {l: 160, r: 20, t: 14, b: 40},
+                xaxis: {...axisStyle, title: "Average arrival delay (minutes)"},
+                yaxis: {...axisStyle}
+            }, chartConfig);
+        }
+
+        function renderPrecipitationChart(dataset) {
+            Plotly.newPlot("precipitation-delay-chart", [{
+                x: dataset.map((row) => row.rain_band),
+                y: dataset.map((row) => row.avg_delay),
+                mode: "lines+markers",
+                type: "scatter",
+                line: {color: "#17a2b8", width: 4, shape: "spline", smoothing: 1},
+                marker: {size: 7, color: "#17a2b8"},
+                fill: "tozeroy",
+                fillcolor: "rgba(23,162,184,0.14)",
+                customdata: dataset.map((row) => [row.point_count]),
+                hovertemplate:
+                    "Rain band %{x} mm<br>Avg delay %{y:.1f} min<br>Points %{customdata[0]}<extra>Precipitation</extra>"
+            }], {
+                ...baseLayout,
+                xaxis: {...axisStyle, title: "Precipitation band (mm)"},
+                yaxis: {...axisStyle, title: "Average delay (minutes)"}
+            }, chartConfig);
+        }
+
+        function renderAirportMap(dataset) {
+            Plotly.newPlot("airport-map-chart", [{
+                type: "scattergeo",
+                mode: "markers",
+                lat: dataset.map((row) => row.LATITUDE),
+                lon: dataset.map((row) => row.LONGITUDE),
+                text: dataset.map((row) => row.Dep_Airport),
+                customdata: dataset.map((row) => [row.Average_Delay]),
+                marker: {
+                    size: dataset.map((row) => row.Bubble_Size),
+                    color: dataset.map((row) => row.Average_Delay_Display),
+                    colorscale: [
+                        [0, "#203a5a"],
+                        [0.35, "#2a9d8f"],
+                        [0.65, "#ffb703"],
+                        [1, "#d9485f"]
+                    ],
+                    cmin: -15,
+                    cmax: 45,
+                    opacity: 0.78,
+                    line: {color: "rgba(255,255,255,0.55)", width: 0.8},
+                    colorbar: {
+                        title: "Avg Delay",
+                        ticksuffix: "m",
+                        outlinewidth: 0
+                    }
+                },
+                hovertemplate: "%{text}<br>%{customdata[0]:.2f} min average delay<extra>Airport</extra>"
+            }], {
+                ...baseLayout,
+                margin: {l: 16, r: 16, t: 0, b: 0},
+                geo: {
+                    scope: "north america",
+                    projection: {type: "albers usa"},
+                    showland: true,
+                    landcolor: "#eff6ff",
+                    showcountries: false,
+                    showlakes: true,
+                    lakecolor: "#dbeafe",
+                    subunitcolor: "rgba(20,33,61,0.12)",
+                    bgcolor: "rgba(0,0,0,0)"
+                }
+            }, chartConfig);
+        }
+
+        async function bootVisualizations() {
+            const status = document.getElementById("viz-status");
+            try {
+                const response = await fetch("/api/visualization-data");
+                const payload = await response.json();
+
+                setSummary(payload.summary);
+                renderTemperatureChart(payload.temperature_delay);
+                renderHeatmap(payload.delay_heatmap);
+                renderMonthlyDelay(payload.monthly_delay);
+                renderMonthlyDelayCount(payload.monthly_delay_count);
+                renderTopAirlines(payload.top_airlines);
+                renderPrecipitationChart(payload.precipitation_delay);
+                renderAirportMap(payload.airport_map);
+
+                status.textContent = "Interactive charts loaded from Flask data endpoints.";
+            } catch (error) {
+                console.error(error);
+                status.textContent = "Visualization data could not be loaded.";
+            }
+        }
+
+        revealCards();
+        bootVisualizations();
+    </script>
+</body>
+</html>

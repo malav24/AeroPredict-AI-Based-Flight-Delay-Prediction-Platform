@@ -1,0 +1,65 @@
+# AeroPredict Git Ignore Rules
+
+# Python-related ignores
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# Large Datasets & CSV files (Excluding small lookup/geolocation files needed for startup)
+flight_delay/US_flights_2023.csv
+flight_delay/preprocessed_flight_datav2.csv
+flight_delay/preprocessed_flight_data_final.csv
+flight_delay/maj us flight - january 2024.csv
+flight_delay/Cancelled_Diverted_2023.csv
+flight_delay/weather_meteo_by_airport.csv
+# Uncomment the line below if you prefer to ignore all large CSVs in flight_delay/
+# flight_delay/*.csv
+
+# Spark ML Models (Large folder structure containing stages and parquet data)
+gbt_full_pipeline/
+
+# Machine Learning model checkpoints and large exports (Keep small pkl metadata if needed)
+# If you want to force users to train models before running, uncomment these:
+# *.pkl
+
+# Visualization cache (weather_vs_delay.csv/json are 14MB and 46MB respectively)
+# They can be committed to allow offline dashboard rendering, but if you want a minimal repo:
+# static/viz_data/weather_vs_delay.csv
+# static/viz_data/weather_vs_delay.json
+
+# IDE Settings and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
